@@ -2,49 +2,53 @@ import sys
 import json
 from pathlib import Path
 from src.canvas_client import fetch_active_courses, fetch_course_assignments
+from src.state import compute_diff_and_update
 from src.llm import query_nrp
 
-def run_agent(offline: bool = False):
+def run_agent(offline: bool = False, db_path: str = "clockwise.db"):
     assignments_data = []
 
     if offline:
         fixtures_dir = Path("tests/fixtures")
         assignments_file = fixtures_dir / "assignments.json"
-
         if not assignments_file.exists():
             print("Error: Offline fixtures not found in tests/fixtures/")
             sys.exit(1)
 
         with open(assignments_file) as f:
             assignments_data = json.load(f)
-        print(f"[OFFLINE] Loaded {len(assignments_data)} assignment(s) from fixture.")
+        print(f"[OFFLINE] Loaded {len(assignments_data)} assignment(s).")
 
     else:
-        # Live Canvas fetch
         try:
             courses = fetch_active_courses()
-            print(f"Discovered {len(courses)} active course(s). Fetching assignments...")
             for course in courses:
-                course_assignments = fetch_course_assignments(course["id"])
-                for a in course_assignments:
-                    a["course_name"] = course["name"]
-                assignments_data.extend(course_assignments)
+                c_assignments = fetch_course_assignments(course["id"])
+                assignments_data.extend(c_assignments)
+            print(f"Fetched {len(assignments_data)} active assignment(s) from Canvas.")
         except Exception as e:
             print(f"Canvas fetch failed: {e}")
             sys.exit(1)
 
-    if not assignments_data:
-        print("No assignments found.")
+    # Run state snapshot and diff
+    changes = compute_diff_and_update(assignments_data, db_path=db_path)
+
+    # Core Value Prop: Silence if nothing changed
+    if not changes:
+        print("no material changes")
         return
 
-    # Pass assignments to NRP via llm.py
-    prompt = f"Here is the student's current assignment data:\n{json.dumps(assignments_data, indent=2)}\n\nSummarize the pending deadlines in 2-3 concise sentences."
-    print("\nSending payload to NRP (gpt-oss)...")
+    # Pass only changes to LLM for triage & concise compose
+    prompt = (
+        f"Detected Canvas changes:\n{json.dumps(changes, indent=2)}\n\n"
+        "Draft a clear 2-3 sentence notification summarizing these changes for a tired student. "
+        "Explicitly label items as NEW or CHANGED (with old -> new date)."
+    )
     
     try:
-        summary = query_nrp(prompt)
-        print("\n--- Agent Summary ---")
-        print(summary)
+        digest = query_nrp(prompt)
+        print("\n--- Agent Digest ---")
+        print(digest)
     except Exception as e:
         print(f"LLM call failed: {e}")
 

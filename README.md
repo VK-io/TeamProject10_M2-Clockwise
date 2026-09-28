@@ -5,10 +5,11 @@ Clockwise prevents students from missing coursework caused by post-syllabus sche
 
 ## 2. Current Capabilities
 - Queries Canvas REST endpoints for active courses and assignment schedules via an integrated MCP tool interface.
-- Stores baseline assignment states within a local SQLite database and diffs current data against historical snapshots.
-- Detects assignment creations, deletions, and modified due dates (`due_at`).
-- Leverages an NRP-hosted model to triage material modifications and generate an actionable, 2–3 sentence digest.
-- Contains an offline mode (`--offline`) using scrubbed fixture payloads to evaluate behavior without network access.
+- Maintains persistent assignment history using a local SQLite database (`clockwise.db`) tracking course ID, name, due date, update timestamps, and run presence.
+- Implements an automated diff engine emitting `NEW`, `DUE_DATE_MOVED`, and `REMOVED` change events between polling intervals.
+- Enforces strict silence when snapshots match, logging clean exits with zero unnecessary student interruptions.
+- Employs an NRP-hosted model (`gpt-oss`) behind a unified wrapper to triage material changes into a 2–3 sentence digest.
+- Supports offline testing (`--offline`) via scrubbed JSON fixtures for deterministic grading and network-independent execution.
 
 ## 3. Intentionally Deferred Capabilities
 - Multi-agent collaboration, critics, and dynamic task-loop handoffs (scheduled for M3).
