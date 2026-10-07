@@ -30,15 +30,15 @@ def run_agent(offline: bool = False, db_path: str = "clockwise.db"):
             print(f"Canvas fetch failed: {e}")
             sys.exit(1)
 
-    # Run state snapshot and diff
+    #Run state snapshot and diff
     changes = compute_diff_and_update(assignments_data, db_path=db_path)
 
-    # Core Value Prop: Silence if nothing changed
+    #Core Value Prop: Silence if nothing changed
     if not changes:
         print("no material changes")
         return
 
-    # Pass only changes to LLM for triage & concise compose
+    #Pass only changes to LLM for triage & concise compose
     prompt = (
         f"Detected Canvas changes:\n{json.dumps(changes, indent=2)}\n\n"
         "Draft a clear 2-3 sentence notification summarizing these changes for a tired student. "

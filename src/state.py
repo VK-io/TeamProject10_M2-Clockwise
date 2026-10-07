@@ -53,7 +53,7 @@ def compute_diff_and_update(current_assignments: List[Dict[str, Any]], db_path: 
     with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
 
-        # 1. Check for NEW and DUE_DATE_MOVED
+        #1. Check for NEW and DUE_DATE_MOVED
         for assign in current_assignments:
             a_id = assign["id"]
             due_at = assign.get("due_at")
@@ -62,7 +62,7 @@ def compute_diff_and_update(current_assignments: List[Dict[str, Any]], db_path: 
             name = assign.get("name", "Untitled")
 
             if a_id not in previous_snapshot:
-                # Event: NEW
+                #Event: NEW
                 changes.append({
                     "event_type": "NEW",
                     "assignment_id": a_id,
@@ -77,9 +77,9 @@ def compute_diff_and_update(current_assignments: List[Dict[str, Any]], db_path: 
 
             else:
                 old = previous_snapshot[a_id]
-                # Compare due dates (normalize None and strings)
+                #Compare due dates (normalize None and strings)
                 if (old["due_at"] or "") != (due_at or ""):
-                    # Event: DUE_DATE_MOVED
+                    #Event: DUE_DATE_MOVED
                     changes.append({
                         "event_type": "DUE_DATE_MOVED",
                         "assignment_id": a_id,
@@ -89,14 +89,14 @@ def compute_diff_and_update(current_assignments: List[Dict[str, Any]], db_path: 
                         "new_due_at": due_at
                     })
 
-                # Refresh metadata & last_seen
+                #Refresh metadata & last_seen
                 cursor.execute("""
                     UPDATE assignments_snapshot
                     SET name = ?, due_at = ?, updated_at = ?, last_seen = ?
                     WHERE id = ?
                 """, (name, due_at, updated_at, now_iso, a_id))
 
-        # 2. Check for REMOVED assignments
+        #2. Check for REMOVED assignments
         for old_id, old_data in previous_snapshot.items():
             if old_id not in current_ids:
                 changes.append({

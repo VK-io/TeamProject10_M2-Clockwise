@@ -27,7 +27,7 @@ def _paginate(url: str) -> List[Dict[str, Any]]:
 
         results.extend(response.json())
 
-        # Parse the 'Link' header for rel="next"
+        #Parse the 'Link' header for rel="next"
         link_header = response.headers.get("Link", "")
         next_match = re.search(r'<([^>]+)>;\s*rel="next"', link_header)
         current_url = next_match.group(1) if next_match else None
