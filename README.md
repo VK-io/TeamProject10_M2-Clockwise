@@ -26,15 +26,12 @@ Clockwise prevents students from missing coursework caused by post-syllabus sche
    # On Windows (Git Bash):
    source venv/Scripts/activate
    pip install -r requirements.txt
-2. Run the test suite (NOT IMPLEMENTED YET):
-   ```bash
-   pytest
-3. Execute locally:
+2. Execute locally:
    ```bash
    # Offline mode using /tests/fixtures
-   python -m -src.agent --offline
+   python -m src.agent --offline
    # Live execution via Canvas API
-   python -m -src.agent
+   python -m src.agent
 
 ## 5. Known Limitations
 - Assignments lacking an explicit `due_at` timestamp are bypassed during timeline diff calculations.
