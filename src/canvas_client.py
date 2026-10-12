@@ -49,7 +49,7 @@ def fetch_active_courses() -> List[Dict[str, Any]]:
 
 def fetch_course_assignments(course_id: int) -> List[Dict[str, Any]]:
     """Returns filtered assignment schema for a specific course."""
-    endpoint = f"{BASE_URL}/api/v1/courses/{course_id}/assignments"
+    endpoint = f"{BASE_URL}/api/v1/courses/{course_id}/assignments?include[]=submission&per_page=100"
     raw_assignments = _paginate(endpoint)
     return [
         {
@@ -59,7 +59,17 @@ def fetch_course_assignments(course_id: int) -> List[Dict[str, Any]]:
             "due_at": a.get("due_at"),
             "updated_at": a.get("updated_at"),
             "html_url": a.get("html_url", ""),
-            "points_possible": a.get("points_possible", 0.0)
+            "points_possible": a.get("points_possible") or 0.0,
+            "graded": bool(a.get("points_possible")) and a.get("grading_type") != "not_graded",
+            "submitted": _is_submitted(a.get("submission") or {})
         }
         for a in raw_assignments
     ]
+
+def _is_submitted(submission: Dict[str, Any]) -> bool:
+    # A graded workflow_state counts as done even without submitted_at (e.g. on-paper work).
+    return bool(
+        submission.get("submitted_at")
+        or submission.get("excused")
+        or submission.get("workflow_state") in ("submitted", "graded", "pending_review")
+    )
