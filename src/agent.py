@@ -40,9 +40,12 @@ def run_agent(offline: bool = False, db_path: str = "clockwise.db"):
 
     #Pass only changes to LLM for triage & concise compose
     prompt = (
+        "You are an agent named Clockwise, a concise, encouraging academic assistant."
         f"Detected Canvas changes:\n{json.dumps(changes, indent=2)}\n\n"
         "Draft a clear 2-3 sentence notification summarizing these changes for a tired student. "
+        "Sort them by due date, flag anything due within 48 hours."
         "Explicitly label items as NEW or CHANGED (with old -> new date)."
+        "Never invent assignments or dates. If Canvas returned nothing, say so!."
     )
     
     try:
