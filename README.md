@@ -7,8 +7,10 @@ Clockwise prevents students from missing coursework caused by post-syllabus sche
 - Queries Canvas REST endpoints for active courses and assignment schedules via an integrated MCP tool interface.
 - Maintains persistent assignment history using a local SQLite database (`clockwise.db`) tracking course ID, name, due date, update timestamps, and run presence.
 - Implements an automated diff engine emitting `NEW`, `DUE_DATE_MOVED`, and `REMOVED` change events between polling intervals.
-- Enforces strict silence when snapshots match, logging clean exits with zero unnecessary student interruptions.
-- Employs an NRP-hosted model (`gpt-oss`) behind a unified wrapper to triage material changes into a 2–3 sentence digest.
+- Records a silent baseline on the first run so existing coursework is not reported as `NEW`.
+- Notifies only on `NEW` assignments or `DUE_DATE_MOVED`; otherwise exits silently with `no material changes`.
+- Employs an NRP-hosted model (`gpt-oss`) behind a unified wrapper to triage material changes into a 2–3 sentence digest, referring to courses by name.
+- Appends a deterministic list of work due in the next 14 days and graded, unsubmitted work marked `PAST DUE` (local time zone).
 - Supports offline testing (`--offline`) via scrubbed JSON fixtures for deterministic grading and network-independent execution.
 
 ## 3. Intentionally Deferred Capabilities
@@ -32,6 +34,10 @@ Clockwise prevents students from missing coursework caused by post-syllabus sche
    python -m src.agent --offline
    # Live execution via Canvas API
    python -m src.agent
+   # Unit tests
+   python -m pytest
+   ```
+   The first run of either mode only saves a baseline; run it again after an assignment is added or a due date changes to see a digest. Delete `clockwise.db` to reset.
 
 ## 5. Known Limitations
 - Assignments lacking an explicit `due_at` timestamp are bypassed during timeline diff calculations.

@@ -110,3 +110,8 @@ def compute_diff_and_update(current_assignments: List[Dict[str, Any]], db_path: 
         conn.commit()
 
     return changes
+def has_snapshot(db_path: str = DB_PATH) -> bool:
+    """True once a previous run has recorded at least one assignment."""
+    init_db(db_path)
+    with sqlite3.connect(db_path) as conn:
+        return conn.execute("SELECT 1 FROM assignments_snapshot LIMIT 1").fetchone() is not None
